@@ -16,15 +16,25 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
   }
 }
 
 provider "kubernetes" {
-  config_path = "~/.kube/config"
+  host                   = kind_cluster.default.endpoint
+  cluster_ca_certificate = base64decode(kind_cluster.default.cluster_ca_certificate)
+  client_certificate     = base64decode(kind_cluster.default.client_certificate)
+  client_key             = base64decode(kind_cluster.default.client_key)
 }
 
 provider "helm" {
   kubernetes {
-    config_path = "~/.kube/config"
+    host                   = kind_cluster.default.endpoint
+    cluster_ca_certificate = base64decode(kind_cluster.default.cluster_ca_certificate)
+    client_certificate     = base64decode(kind_cluster.default.client_certificate)
+    client_key             = base64decode(kind_cluster.default.client_key)
   }
 }
