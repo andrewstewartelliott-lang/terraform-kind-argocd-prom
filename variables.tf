@@ -21,9 +21,3 @@ variable "argo_manifest_url" {
   type        = string
   default     = "https://raw.githubusercontent.com/andrewstewartelliott-lang/argocd/refs/heads/main/argo/base/base.yaml"
 }
-
-variable "k8s_viewer_cluster_role_url" {
-  description = "The URL for the Kubernetes viewer cluster role manifest"
-  type        = string
-  default     = "https://raw.githubusercontent.com/andrewstewartelliott-lang/golang-k8s-view/refs/heads/main/yaml/clusterRole.yaml"
-}

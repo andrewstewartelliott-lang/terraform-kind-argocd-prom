@@ -1,17 +1,14 @@
 # terraform-kind-argocd-prom
 
-The main purpose of this project is automate the creation of a local kind cluster with terraform. It then installs ArgoCD and sets up the initial repo from which to pull from.  This includes the Prometheus/Grafana stack, an ArgoCD dashboard and a golang-based test application called golang-k8s-viewer (which I coded and published a helm chart to github via gh_pages).
-
-To modify this project, set your own `base.yaml` file in the variable `argo_manifest_url` in variables.tf to point to your own ArgoCD repo. Most of the toil here is waiting for the kind cluster to be ready, hence the use of null_resources, triggers and local-exec blocks.
+The main purpose of this project is automate the creation of a local kind cluster with terraform. It then installs ArgoCD and sets up the initial repo from which to pull from.  This includes the Prometheus, Grafana and ArgoCD(now with dashboard!)
 
 This terraform:
 - provisions a local kubernetes-in-docker (kind) cluster with 1 control plane and 2 worker nodes using terraform tehcyx/kind provider
 - terraform installs argocd via helm release chart argo-cd from argo-helm repo
 - terraform pulls configs from https://github.com/andrewstewartelliott-lang/argocd using base/base.yaml on `main`
 - argocd installs the prometheus/grafana monitoring stack and metrics from official sources
-- argocd installs test application from https://github.com/andrewstewartelliott-lang/golang-k8s-view via helm chart release
 
-## Prerequisites
+## Getting Started
 
 Before running this project, make sure you have:
 
@@ -20,29 +17,15 @@ Before running this project, make sure you have:
 - Kind installed
 - kubectl installed
 
-## How to run
+Now pull the code and apply terraform:
+```bash
+git clone https://github.com/andrewstewartelliott-lang/terraform-kind-argocd-prom.git
+cd ./terraform-kind-argocd-prom/
+terraform init
+terraform apply
+```
 
-1. Initialize Terraform:
-   ```bash
-   terraform init
-   ```
-
-2. Review the planned changes:
-   ```bash
-   terraform plan
-   ```
-
-3. Apply the configuration to create the cluster:
-   ```bash
-   terraform apply
-   ```
-
-4. To destroy the cluster when you are done:
-   ```bash
-   terraform destroy
-   ```
-
-## Expected usage
+## Expected output
 ```bash
 % terraform apply
 ...
