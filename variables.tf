@@ -21,3 +21,8 @@ variable "argo_manifest_url" {
   type        = string
   default     = "https://raw.githubusercontent.com/andrewstewartelliott-lang/argocd/refs/heads/main/argo/base/base.yaml"
 }
+variable "host_storage_path" {
+  description = "Host directory mounted into every kind node for PV data. Defaults to ./.kind-storage in this repo."
+  type        = string
+  default     = ""
+}

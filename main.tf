@@ -1,7 +1,28 @@
+locals {
+
+  # Host directory shared by every node. Docker Desktop on macOS only shares
+  # /Users, /Volumes, /private and /tmp by default; /tmp is wiped on reboot,
+  # so default to a folder inside this repo instead.
+  host_storage_path = abspath(coalesce(var.host_storage_path, "${path.module}/.kind-storage"))
+
+  node_storage_mounts = [
+    {
+      # Backing store for the default "standard" StorageClass (dynamic PVCs).
+      host_path      = "${local.host_storage_path}/local-path"
+      container_path = "/var/local-path-provisioner"
+    },
+    {
+      # Backing store for hand-made hostPath PVs ("manual" StorageClass).
+      host_path      = "${local.host_storage_path}/static"
+      container_path = "/mnt/data"
+    },
+  ]
+}
+
 resource "kind_cluster" "default" {
-  name           = var.cluster_name
-  node_image     = var.node_image
-  wait_for_ready = true
+  name            = var.cluster_name
+  node_image      = var.node_image
+  wait_for_ready  = true
 
   kind_config {
     kind        = "Cluster"
@@ -19,6 +40,14 @@ resource "kind_cluster" "default" {
         EOT
       ]
 
+      dynamic "extra_mounts" {
+        for_each = local.node_storage_mounts
+        content {
+          host_path      = extra_mounts.value.host_path
+          container_path = extra_mounts.value.container_path
+        }
+      }
+
       extra_port_mappings {
         container_port = 80
         host_port      = 80
@@ -32,6 +61,12 @@ resource "kind_cluster" "default" {
       }
 
       extra_port_mappings {
+        container_port = 8000
+        host_port      = 8000
+        protocol       = "TCP"
+      }
+
+      extra_port_mappings {
         container_port = 443
         host_port      = 443
         protocol       = "TCP"
@@ -40,10 +75,26 @@ resource "kind_cluster" "default" {
 
     node {
       role = "worker"
+
+      dynamic "extra_mounts" {
+        for_each = local.node_storage_mounts
+        content {
+          host_path      = extra_mounts.value.host_path
+          container_path = extra_mounts.value.container_path
+        }
+      }
     }
 
     node {
       role = "worker"
+
+      dynamic "extra_mounts" {
+        for_each = local.node_storage_mounts
+        content {
+          host_path      = extra_mounts.value.host_path
+          container_path = extra_mounts.value.container_path
+        }
+      }
     }
   }
 }

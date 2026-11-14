@@ -1,0 +1,35 @@
+# Dynamic provisioning: a PVC on kind's default "standard" StorageClass
+# (local-path-provisioner). No PV needed; one is created when the pod is
+# scheduled. Data lands in ./.kind-storage/local-path/<pv>_default_test-dynamic-pvc.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-dynamic-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-dynamic-pod
+  namespace: default
+spec:
+  containers:
+    - name: app
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - date >> /data/log.txt && cat /data/log.txt && sleep 3600
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: test-dynamic-pvc

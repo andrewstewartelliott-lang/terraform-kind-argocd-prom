@@ -88,3 +88,24 @@ kubectl port-forward service/kube-prometheus-stack-prometheus -n argocd 9090:909
 ```bash
 http://localhost:9090/
 ```
+
+# Persistent Volumes
+Every kind node mounts `./.kind-storage` (override with `-var host_storage_path=/some/abs/path`), so volume data lives on your Mac, is shared by all nodes, and survives `terraform destroy`.
+
+| Use case | StorageClass | Data on host |
+|---|---|---|
+| Dynamic PVC (just create a PVC) | `standard` (default, local-path-provisioner) | `.kind-storage/local-path/<pv>_<ns>_<pvc>` |
+| Hand-made hostPath PV | `manual` (set on **both** PV and PVC) | `.kind-storage/static/...` (PV `hostPath` under `/mnt/data`) |
+
+Notes:
+- Both classes use `WaitForFirstConsumer`: a PVC stays `Pending` until a pod uses it. That is expected.
+- A PVC without `storageClassName` gets `standard`, so it will **never** bind to a static PV. Use `storageClassName: manual` on both.
+
+Test it:
+```bash
+export KUBECONFIG=$PWD/test-cluster-config
+kubectl apply -f tests/pvc/
+kubectl get pv,pvc
+kubectl logs test-pod
+kubectl delete -f tests/pvc/   # cleanup (static data remains in .kind-storage/static)
+```

@@ -27,4 +27,9 @@ resource "helm_release" "argocd" {
   }
 
   depends_on = [kind_cluster.default]
+
+  # A new kind cluster is empty, so reinstall Argo CD whenever it is replaced.
+  lifecycle {
+    replace_triggered_by = [kind_cluster.default.id]
+  }
 }
