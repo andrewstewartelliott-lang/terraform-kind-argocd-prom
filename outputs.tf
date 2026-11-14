@@ -5,5 +5,5 @@ output "kind_cluster_status" {
 
 output "argocd_helm_message" {
   description = "The notes returned by the Argo CD Helm release"
-  value       = helm_release.argocd.metadata[0].notes
+  value       = var.enable_argo ? helm_release.argocd[0].metadata.notes : "Argo CD is disabled (enable_argo = false)"
 }

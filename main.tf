@@ -17,6 +17,15 @@ locals {
       container_path = "/mnt/data"
     },
   ]
+
+  # Kubelet hardening for every node (kube-bench 4.2.13, 4.2.14): cap the
+  # number of processes per pod and run containers with the runtime's default
+  # seccomp profile unless a pod sets its own.
+  kubelet_hardening_patch = <<-EOT
+    kind: KubeletConfiguration
+    podPidsLimit: 4096
+    seccompDefault: true
+  EOT
 }
 
 # Encryption at rest for Secrets (kube-bench 1.2.27, 1.2.28). The key is
@@ -58,9 +67,9 @@ resource "null_resource" "encryption_config" {
 }
 
 resource "kind_cluster" "default" {
-  name            = var.cluster_name
-  node_image      = var.node_image
-  wait_for_ready  = true
+  name           = var.cluster_name
+  node_image     = var.node_image
+  wait_for_ready = true
 
   # Write the cluster's kubeconfig to ~/.kube instead of this repo folder.
   kubeconfig_path = pathexpand("~/.kube/${var.cluster_name}-config")
@@ -121,6 +130,8 @@ resource "kind_cluster" "default" {
           extraArgs:
             profiling: "false"
         EOT
+        ,
+        local.kubelet_hardening_patch,
       ]
 
       # Audit policy used by the API server (see ClusterConfiguration above).
@@ -171,6 +182,8 @@ resource "kind_cluster" "default" {
     node {
       role = "worker"
 
+      kubeadm_config_patches = [local.kubelet_hardening_patch]
+
       dynamic "extra_mounts" {
         for_each = local.node_storage_mounts
         content {
@@ -182,6 +195,8 @@ resource "kind_cluster" "default" {
 
     node {
       role = "worker"
+
+      kubeadm_config_patches = [local.kubelet_hardening_patch]
 
       dynamic "extra_mounts" {
         for_each = local.node_storage_mounts

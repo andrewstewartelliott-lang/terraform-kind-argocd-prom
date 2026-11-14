@@ -26,3 +26,21 @@ variable "host_storage_path" {
   type        = string
   default     = ""
 }
+
+variable "enable_argo" {
+  description = "Install Argo CD (helm.tf) and apply the Argo base manifest (argo.tf). Set to false for a bare kind cluster."
+  type        = bool
+  default     = false
+}
+
+variable "enable_kro" {
+  description = "Install kro (Kube Resource Orchestrator) from oci://registry.k8s.io/kro/charts/kro."
+  type        = bool
+  default     = true
+}
+
+variable "kro_chart_version" {
+  description = "kro Helm chart version to install."
+  type        = string
+  default     = "0.10.0"
+}
