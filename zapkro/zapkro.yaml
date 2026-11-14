@@ -16,6 +16,10 @@ spec:
       command: "[]string"
       httpPort: integer | default=8080
       forceRedeployCounter: integer | default=0
+      # Numeric user/group for the app container. Required because
+      # runAsNonRoot can't verify images that use a named USER.
+      runAsUser: integer | default=1000
+      runAsGroup: integer | default=1000
       zap:
         storageClassName: string | required=true
         urls: "[]string | required=true"
@@ -48,6 +52,13 @@ spec:
                 app: ${schema.spec.name}
                 forceRedeployCounter: ${string(schema.spec.forceRedeployCounter)}
             spec:
+              # Meets the Pod Security "restricted" profile.
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: ${schema.spec.runAsUser}
+                runAsGroup: ${schema.spec.runAsGroup}
+                seccompProfile:
+                  type: RuntimeDefault
               containers:
                 - name: ${schema.spec.name}
                   image: ${schema.spec.image.repository}:${schema.spec.image.tag}
@@ -56,6 +67,11 @@ spec:
                       containerPort: ${schema.spec.httpPort}
                       protocol: TCP
                   command: ${schema.spec.command}
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                        - ALL
     - id: service
       template:
         apiVersion: v1
@@ -169,6 +185,16 @@ spec:
           name: ${schema.spec.name}-${schema.spec.image.tag}-zap-${string(schema.spec.forceRedeployCounter)}
           namespace: ${schema.metadata.namespace}
         spec:
+          # Meets the Pod Security "restricted" profile. 1000 is the "zap"
+          # user in ghcr.io/zaproxy/zaproxy; fsGroup lets it write reports
+          # to the PVC.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - args:
                 - ./zap.sh
@@ -185,6 +211,11 @@ spec:
                 - api.addrs.addr.regex=true
               image: ghcr.io/zaproxy/zaproxy:stable
               name: zaproxy
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
               ports:
                 - containerPort: 8080
                   name: zaproxy
