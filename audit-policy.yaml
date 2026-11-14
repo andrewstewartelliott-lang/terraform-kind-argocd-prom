@@ -1,0 +1,31 @@
+# API server audit policy, mounted into the kind control-plane node by main.tf
+# (CIS 1.2.16-1.2.19, 3.2.1). Logs: /var/log/kubernetes/audit/audit.log inside
+# the test-cluster-control-plane container.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  # Health checks and events are high-volume noise.
+  - level: None
+    nonResourceURLs:
+      - /healthz*
+      - /livez*
+      - /readyz*
+      - /version
+  - level: None
+    resources:
+      - group: ""
+        resources: ["events"]
+  # Never log secret/configmap/token payloads, only who touched them.
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps", "serviceaccounts/token"]
+      - group: authentication.k8s.io
+        resources: ["tokenreviews"]
+  # Record the request body for anything that changes cluster state.
+  - level: Request
+    verbs: ["create", "update", "patch", "delete", "deletecollection"]
+  # Everything else (reads, watches): metadata only.
+  - level: Metadata
