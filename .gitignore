@@ -45,3 +45,6 @@ terraform.rc
 # kind cluster kubeconfig and local PV data
 *-config
 .kind-storage/
+
+# macOS
+.DS_Store
