@@ -103,7 +103,7 @@ Notes:
 
 Test it:
 ```bash
-export KUBECONFIG=$PWD/test-cluster-config
+export KUBECONFIG=~/.kube/test-cluster-config
 kubectl apply -f tests/pvc/
 kubectl get pv,pvc
 kubectl logs test-pod
