@@ -30,7 +30,7 @@ variable "host_storage_path" {
 variable "enable_argo" {
   description = "Install Argo CD (helm.tf) and apply the Argo base manifest (argo.tf). Set to false for a bare kind cluster."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "enable_kro" {
